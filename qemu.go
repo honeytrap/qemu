@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/digitalocean/go-qemu/hypervisor"
+	"github.com/digitalocean/go-qemu/qemu"
+	"github.com/digitalocean/go-qemu/qmp"
 )
 
 var (
@@ -90,4 +92,119 @@ func NewDomain(config *DomainConfig) *Domain {
 	dm.hypervisor = hypervisor.New(dm.driver)
 
 	return &dm
+}
+
+// ListVMS returns the list of all VMS available in the hypervisor.
+func (dm *Domain) ListVMS() ([]string, error) {
+	return dm.hypervisor.DomainNames()
+}
+
+// NewContainer returns a new DomainContainer for a giving hypervisor vm.
+func (dm *Domain) NewContainer(domainName string) (*DomainContainer, error) {
+	domain, err := dm.hypervisor.Domain(domainName)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DomainContainer{
+		name:   domainName,
+		domain: domain,
+	}, nil
+}
+
+// DomainContainer defines a structure which interacts with a given VM
+// domain object.
+type DomainContainer struct {
+	name   string
+	domain *qemu.Domain
+}
+
+// Domain returns the underline qemu.Domain object for this container.
+func (dmc *DomainContainer) Domain() *qemu.Domain {
+	return dmc.domain
+}
+
+// Name returns the giving name associated with the domain vm.
+func (dmc *DomainContainer) Name() string {
+	return dmc.name
+}
+
+// Devices returns the giving list of available devices for the domain vm.
+func (dmc *DomainContainer) Devices() ([]qemu.BlockDevice, []qemu.PCIDevice, error) {
+	pcis, err := dmc.domain.PCIDevices()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	blocks, err := dmc.domain.BlockDevices()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return blocks, pcis, nil
+}
+
+// Status returns the domain vm current status.
+func (dmc *DomainContainer) Status() (qemu.Status, error) {
+	return dmc.domain.Status()
+}
+
+// Network returns network details related to the vm.
+func (dmc *DomainContainer) Network() ([]byte, error) {
+	// if status, err := dmc.domain.Status
+	res, err := dmc.domain.Run(qmp.Command{
+		Execute: "query-vnc",
+	})
+
+	return res, err
+}
+
+// Wakeup activtes the domain if wakeup and starts the domains vm for
+// interaction.
+func (dmc *DomainContainer) Wakeup() error {
+	// if status, err := dmc.domain.Status
+	_, err := dmc.domain.Run(qmp.Command{
+		Execute: "system_wakeup",
+	})
+
+	return err
+}
+
+// Resume activtes the domain if paused and resumes the domains vm for
+// interaction.
+func (dmc *DomainContainer) Resume() error {
+	// if status, err := dmc.domain.Status
+	_, err := dmc.domain.Run(qmp.Command{
+		Execute: "cont",
+	})
+
+	return err
+}
+
+// Start activtes the domain if not running and starts the domains vm for
+// interaction.
+func (dmc *DomainContainer) Start() error {
+	// if status, err := dmc.domain.Status
+	_, err := dmc.domain.Run(qmp.Command{
+		Execute: "system_wakeup",
+	})
+
+	return err
+}
+
+// Reset resets the domain and its state.
+func (dmc *DomainContainer) Reset() error {
+	return dmc.domain.SystemReset()
+}
+
+// Stop Poweroff the giving domain.
+func (dmc *DomainContainer) Stop() error {
+	return dmc.domain.SystemPowerdown()
+}
+
+// NetworkAddress returns the associated network address for the vm.
+func (dmc *DomainContainer) NetworkAddress() string {
+	var addr string
+
+	return addr
 }
