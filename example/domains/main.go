@@ -53,8 +53,8 @@ func main() {
 		panic(err)
 	}
 
-	events.Emit(stdout.Error("VM Network").WithFields(metrics.Fields{
-		"response": res,
+	events.Emit(stdout.Info("VM Network").WithFields(metrics.Fields{
+		"response": string(res),
 	}))
 
 	if err := ubuntuContainer.Resume(); err != nil {
