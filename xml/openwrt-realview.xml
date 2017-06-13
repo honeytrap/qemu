@@ -1,0 +1,29 @@
+<domain type='qemu' id='22'>
+  <name>openwrt-realview</name>
+  <uuid>8028f71a-1db8-40a4-94fa-5a4a42014273</uuid>
+  <memory>131072</memory>
+  <currentMemory>131072</currentMemory>
+  <vcpu>1</vcpu>
+  <os>
+    <type arch='armv7l' machine='realview-eb-mpcore'>hvm</type>
+    <kernel>/home/alex/Labs/repos/go/src/github.com/honeytrap/qemu/firmwares/openwrt-realview-vmlinux-initramfs.elf</kernel>
+    <cmdline>&quot;root=0800&quot;</cmdline>
+    <boot dev='hd'/>
+  </os>
+  <features>
+    <acpi/>
+  </features>
+  <clock offset='utc'/>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <devices>
+    <emulator>/usr/bin/qemu-system-arm</emulator>
+    <interface type='network'>
+      <source network='default'/>
+      <model type='virtio'/>
+    </interface>
+    <input type='mouse' bus='ps2'/>
+  </devices>
+</domain>
+
